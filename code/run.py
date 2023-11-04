@@ -77,10 +77,10 @@ class TextDataset(Dataset):
                 self.examples.append(convert_examples_to_features(js,tokenizer,args))
         if 'train' in file_path:
             for idx, example in enumerate(self.examples[:3]):
-                    logger.info("*** Example ***")
-                    logger.info("label: {}".format(example.label))
-                    logger.info("input_tokens: {}".format([x.replace('\u0120','_') for x in example.input_tokens]))
-                    logger.info("input_ids: {}".format(' '.join(map(str, example.input_ids))))
+                    print("*** Example ***")
+                    print("label: {}".format(example.label))
+                    print("input_tokens: {}".format([x.replace('\u0120','_') for x in example.input_tokens]))
+                    print("input_ids: {}".format(' '.join(map(str, example.input_ids))))
 
     def __len__(self):
         return len(self.examples)
@@ -120,11 +120,11 @@ def train(args, train_dataset, model, tokenizer):
                                                 num_training_steps=max_steps)
 
     # Train!
-    logger.info("***** Running training *****")
-    logger.info("  Num examples = %d", len(train_dataset))
-    logger.info("  Num Epochs = %d", args.num_train_epochs)
-    logger.info("  batch size = %d", args.train_batch_size)
-    logger.info("  Total optimization steps = %d", max_steps)
+    print("***** Running training *****")
+    print("  Num examples = %d", len(train_dataset))
+    print("  Num Epochs = %d", args.num_train_epochs)
+    print("  batch size = %d", args.train_batch_size)
+    print("  Total optimization steps = %d", max_steps)
     best_acc=0.0
     model.zero_grad()
  
@@ -151,14 +151,14 @@ def train(args, train_dataset, model, tokenizer):
                 
         results = evaluate(args, model, tokenizer)
         for key, value in results.items():
-            logger.info("  %s = %s", key, round(value,4))    
+            print("  %s = %s", key, round(value,4))    
             
         # Save model checkpoint
         if results['eval_acc']>best_acc:
             best_acc=results['eval_acc']
-            logger.info("  "+"*"*20)  
-            logger.info("  Best acc:%s",round(best_acc,4))
-            logger.info("  "+"*"*20)                          
+            print("  "+"*"*20)  
+            print("  Best acc:%s",round(best_acc,4))
+            print("  "+"*"*20)                          
 
             checkpoint_prefix = 'checkpoint-best-acc'
             output_dir = os.path.join(args.output_dir, '{}'.format(checkpoint_prefix))                        
@@ -167,7 +167,7 @@ def train(args, train_dataset, model, tokenizer):
             model_to_save = model.module if hasattr(model,'module') else model
             output_dir = os.path.join(output_dir, '{}'.format('model.bin')) 
             torch.save(model_to_save.state_dict(), output_dir)
-            logger.info("Saving model checkpoint to %s", output_dir)
+            print("Saving model checkpoint to %s", output_dir)
                         
 
 
@@ -185,9 +185,9 @@ def evaluate(args, model, tokenizer):
     eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size,num_workers=4,pin_memory=True)
 
     # Eval!
-    logger.info("***** Running evaluation *****")
-    logger.info("  Num examples = %d", len(eval_dataset))
-    logger.info("  Batch size = %d", args.eval_batch_size)
+    print("***** Running evaluation *****")
+    print("  Num examples = %d", len(eval_dataset))
+    print("  Batch size = %d", args.eval_batch_size)
     eval_loss = 0.0
     nb_eval_steps = 0
     model.eval()
@@ -222,9 +222,9 @@ def test(args, model, tokenizer):
     eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size)
 
     # Eval!
-    logger.info("***** Running Test *****")
-    logger.info("  Num examples = %d", len(eval_dataset))
-    logger.info("  Batch size = %d", args.eval_batch_size)
+    print("***** Running Test *****")
+    print("  Num examples = %d", len(eval_dataset))
+    print("  Batch size = %d", args.eval_batch_size)
     eval_loss = 0.0
     nb_eval_steps = 0
     model.eval()
@@ -241,12 +241,12 @@ def test(args, model, tokenizer):
     logits=np.concatenate(logits,0)
     labels=np.concatenate(labels,0)
     preds=logits.argmax(-1)
-    with open(os.path.join(args.output_dir,"predictions.txt"),'w') as f:
+    with open(os.path.join(args.output_dir,"predictions.txt"),'w', encoding="utf-8") as f:
         for example,pred in zip(eval_dataset.examples,preds):
             if pred:
-                f.write('1\n')
+                f.write('1 \n')
             else:
-                f.write('0\n')    
+                f.write('0 \n')    
     
                         
                         
@@ -321,7 +321,7 @@ def main():
     if args.n_gpu > 1:
         model = torch.nn.DataParallel(model)
         
-    logger.info("Training/evaluation parameters %s", args)
+    print("Training/evaluation parameters %s", args)
 
     # Training
     if args.do_train:
@@ -336,9 +336,9 @@ def main():
         model.load_state_dict(torch.load(output_dir))      
         model.to(args.device)
         result=evaluate(args, model, tokenizer)
-        logger.info("***** Eval results *****")
+        print("***** Eval results *****")
         for key in sorted(result.keys()):
-            logger.info("  %s = %s", key, str(round(result[key],4)))
+            print("  %s = %s", key, str(round(result[key],4)))
             
     if args.do_test:
         checkpoint_prefix = 'checkpoint-best-acc/model.bin'
